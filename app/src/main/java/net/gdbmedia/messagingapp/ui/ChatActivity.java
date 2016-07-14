@@ -31,6 +31,7 @@ import butterknife.Bind;
 import butterknife.ButterKnife;
 
 public class ChatActivity extends AppCompatActivity implements View.OnClickListener{
+    public final String TAG = this.getClass().getSimpleName();
     private User mSearchedUser;
     private DatabaseReference mPostReference;
     private User mCurrentUser;
@@ -41,6 +42,8 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
     @Bind(R.id.send) ImageButton mSend;
     @Bind(R.id.message) EditText mMessage;
     private SharedPreferences mSharedPreferences;
+    private Conversation mConvo;
+    private String mConvoKey;
 
 
 
@@ -52,13 +55,15 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
         Gson gson = new Gson();
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         String json = mSharedPreferences.getString("currentUser", null);
+        Log.d(TAG, "onCreate: " + json);
+        mCurrentUser = gson.fromJson(json, User.class);
 
         mDatabase = FirebaseDatabase.getInstance().getReference();
 
-        Log.d("nothing", json.length() +"");
-        mCurrentUser = gson.fromJson(json, User.class);
 
-        Log.d("nothing", mCurrentUser.getName());
+        mConvo = Parcels.unwrap(getIntent().getParcelableExtra("convo"));
+
+//       System.out.println(testMConvo());
 
         ButterKnife.bind(this);
 
@@ -68,35 +73,57 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
         mSend.setOnClickListener(this);
     }
 
+    private boolean testMConvo() {
+        if(mConvo == null){
+            return true;
+        }
+        return false;
+    }
+
     @Override
     public void onClick(View v) {
         if(v == mSend){
 
-            DatabaseReference mConversationPushReference = mDatabase.push();
-            String key = mConversationPushReference.getKey();
-            String keym = mDatabase.push().getKey();
+            Map<String, Object> childUpdates = new HashMap<>();
+
+            if(mConvo == null){
+                mConvoKey = mDatabase.child("conversations").push().getKey();
+                mConvo = new Conversation(new ArrayList<String>(), mConvoKey, new ArrayList<String>());
+
+
+
+                mConvo.addUser(mSearchedUser.getId());
+
+                Log.d(TAG, "onClick: " +mSearchedUser.getId());
+                mConvo.addUser(mCurrentUser.getId());
+
+                mSearchedUser.addConversationId(mConvo.getId());
+                mCurrentUser.addConversationId(mConvo.getId());
+
+                Map<String, Object> searchedValues = mSearchedUser.toMap();
+                Map<String, Object> currentValues = mCurrentUser.toMap();
+
+
+                childUpdates.put("/users/" + mSearchedUser.getId(), searchedValues);
+                childUpdates.put("/users/" + mCurrentUser.getId(), currentValues);
+            }
+
+            String keym = mDatabase.child("messages").push().getKey();
 
             String message = mMessage.getText().toString();
-            Message newMessage = new Message( keym, message,  mCurrentUser.getId(), (new Date()).toString(), key);
+            Message newMessage = new Message( keym, message,  mCurrentUser.getId(), (new Date()).toString(), mConvo.getId());
 
 
-            Conversation newConversation = new Conversation(new ArrayList<String>(), key, new ArrayList<String>());
-            newConversation.addMessage(newMessage.getId());
-            newConversation.addUser(mSearchedUser.getId());
-            newConversation.addUser(mCurrentUser.getId());
 
-            mSearchedUser.addConversationId(newConversation.getId());
-            mCurrentUser.addConversationId(newConversation.getId());
+            mConvo.addMessage(newMessage.getId());
 
-            Map<String, Object> searchedValues = mSearchedUser.toMap();
-            Map<String, Object> currentValues = mCurrentUser.toMap();
-            Map<String, Object> conversationValues = newConversation.toMap();
+
+
+            Map<String, Object> conversationValues = mConvo.toMap();
             Map<String, Object> messageValues = newMessage.toMap();
 
-            Map<String, Object> childUpdates = new HashMap<>();
-            childUpdates.put("/users/" + mSearchedUser.getId(), searchedValues);
-            childUpdates.put("/users/" + mCurrentUser.getId(), currentValues);
-            childUpdates.put("/conversations/" + key, conversationValues);
+
+            childUpdates.put("/conversations/" + mConvoKey, conversationValues);
             childUpdates.put("/messages/" + keym, messageValues);
 
             mDatabase.updateChildren(childUpdates);

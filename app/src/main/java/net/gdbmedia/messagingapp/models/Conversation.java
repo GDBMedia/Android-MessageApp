@@ -18,13 +18,15 @@ import java.util.Map;
 public class Conversation {
 
     private List<String> userIds = new ArrayList<>();
-
-
     private String conversationId;
-
-
-
     private List<String> messages = new ArrayList<>();
+
+
+
+
+    private String otherUser;
+    private String lastMessage;
+    private String lastMessageTime;
 
     public Conversation() {}
 
@@ -32,6 +34,12 @@ public class Conversation {
         this.userIds = userIds;
         this.conversationId = conversationId;
         this.messages = messages;
+    }
+
+    public Conversation(String otherUser, String lastMessage, String lastMessageTime) {
+        this.otherUser = otherUser;
+        this.lastMessage = lastMessage;
+        this.lastMessageTime = lastMessageTime;
     }
 
     public List<String> getUserIds() {
@@ -62,6 +70,17 @@ public class Conversation {
     }
     public void addUser(String userId) {
         this.userIds.add(userId) ;
+    }
+    public String getOtherUser() {
+        return otherUser;
+    }
+
+    public String getLastMessage() {
+        return lastMessage;
+    }
+
+    public String getLastMessageTime() {
+        return lastMessageTime;
     }
 
     @Exclude
