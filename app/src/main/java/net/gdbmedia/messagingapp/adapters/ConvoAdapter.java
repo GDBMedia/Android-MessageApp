@@ -1,6 +1,7 @@
 package net.gdbmedia.messagingapp.adapters;
 
 import android.content.Context;
+import android.content.Intent;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -9,6 +10,10 @@ import android.widget.TextView;
 
 import net.gdbmedia.messagingapp.R;
 import net.gdbmedia.messagingapp.models.Conversation;
+import net.gdbmedia.messagingapp.models.User;
+import net.gdbmedia.messagingapp.ui.ChatActivity;
+
+import org.parceler.Parcels;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -68,12 +73,10 @@ public class ConvoAdapter extends RecyclerView.Adapter<ConvoAdapter.ConvoViewHol
 
         @Override
         public void onClick(View view) {
-//            int itemPosition = getLayoutPosition();
-//            Intent intent = new Intent(view.getContext(), UpdateConversation.class);
-//            intent.putExtra("position", itemPosition + "");
-//            intent.putExtra("conversations", Parcels.wrap(mConversations));
-//            intent.putExtra("origin", mOrigin);
-//            mContext.startActivity(intent);
+            int itemPosition = getLayoutPosition();
+            Intent intent = new Intent(view.getContext(), ChatActivity.class);
+            intent.putExtra("convo", Parcels.wrap(mConversations.get(itemPosition)));
+            mContext.startActivity(intent);
         }
     }
 }

@@ -57,6 +57,7 @@ public class MainActivity extends AppCompatActivity {
     private SharedPreferences mSharedPreferences;
     private SharedPreferences.Editor mEditor;
     private List<Conversation> mConversations= new ArrayList<>();
+    private List<String> mUserIds= new ArrayList<>();
 
     private DatabaseReference mConversationsReference;
     private DatabaseReference mUsersReference;
@@ -93,7 +94,7 @@ public class MainActivity extends AppCompatActivity {
                 new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
-                        // Get user value
+                        mConversations.clear();
                         mCurrentUser = dataSnapshot.getValue(User.class);
                         Gson gson = new Gson();
                         String json = gson.toJson(mCurrentUser);
@@ -143,13 +144,14 @@ public class MainActivity extends AppCompatActivity {
                             // Get user value
                             Conversation conversation = dataSnapshot.getValue(Conversation.class);
                             int indexOfCurrentUser = conversation.getUserIds().indexOf(mCurrentUser.getId());
-                            for(int i=0; i<conversation.getUserIds().size(); i++){
+                            for(int i=0; i<conversation.getUserIds().size(); i++) {
                                 //if its not the user, set otherUserId (
-                                if(conversation.getUserIds().indexOf(conversation.getUserIds().get(i)) != indexOfCurrentUser){
+                                if (conversation.getUserIds().indexOf(conversation.getUserIds().get(i)) != indexOfCurrentUser) {
                                     otherUserId = conversation.getUserIds().get(i);
                                 }
+
                             }
-                            getOtherUsername(conversation.getMessages().get(conversation.getMessages().size() -1));
+                            getOtherUsername(conversation.getMessages().get(conversation.getMessages().size() -1), dataSnapshot.getKey());
 
                             // ...
                         }
@@ -162,16 +164,16 @@ public class MainActivity extends AppCompatActivity {
         }
         }
 
-    private void getOtherUsername(final String lastMessageId) {
+    private void getOtherUsername(final String lastMessageId, final String convoId) {
         Query queryRef = mUsersReference.child(otherUserId);
 
         queryRef.addListenerForSingleValueEvent(
                 new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
+                        String userId = otherUserId;
                        String name = dataSnapshot.getValue(User.class).getName();
-                        Log.d(TAG, "onDataChange: " + otherUsername);
-                        getMessageDeets(lastMessageId, name);
+                        getMessageDeets(lastMessageId, name,userId, convoId);
 
                     }
 
@@ -182,7 +184,7 @@ public class MainActivity extends AppCompatActivity {
                 });
     }
 
-    private void getMessageDeets(final String lastMessageId, final String name) {
+    private void getMessageDeets(final String lastMessageId, final String name, final String otherUserId, final String convoId) {
         mMessagesReference = FirebaseDatabase.getInstance().getReference("messages");
 
         Query queryRef = mMessagesReference.child(lastMessageId);
@@ -193,11 +195,11 @@ public class MainActivity extends AppCompatActivity {
                     public void onDataChange(DataSnapshot dataSnapshot) {
                         lastMessage = dataSnapshot.getValue(Message.class).getContent();
                         lastMessageTime = dataSnapshot.getValue(Message.class).getTimestamp();
-                        Log.d(TAG, "Last Message: " + lastMessage);
-                        Log.d(TAG, "last Message time: " + lastMessageTime);
+                        Log.d(TAG, "onDataChange: " +convoId);
+                        Conversation conversation = new Conversation(name, lastMessage, lastMessageTime, otherUserId, convoId);
+                            mConversations.add(conversation);
 
-                        Conversation conversation = new Conversation(name, lastMessage, lastMessageTime);
-                        mConversations.add(conversation);
+
                         setAdapter();
 
                     }
@@ -214,34 +216,14 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void run() {
 
+                Log.d(TAG, "run: " +mConversations.get(0).getUserIds().toString());
+
                 ConvoAdapter adapter = new ConvoAdapter(MainActivity.this, mConversations);
                 mRecyclerView.setAdapter(adapter);
             }
         });
 
     }
-
-
-//    private void setUpFirebaseAdapter() {
-//        mFirebaseAdapter = new FirebaseRecyclerAdapter<Conversation, FirebaseConvoViewHolder>
-//                (Conversation.class, R.layout.convo_list_item, FirebaseConvoViewHolder.class, mConversationsReference) {
-//
-//            @Override
-//            protected void populateViewHolder(FirebaseConvoViewHolder viewHolder,
-//                                              Conversation model, int position) {
-//                viewHolder.bindConvo(model);
-//            }
-//        };
-//        mRecyclerView.setHasFixedSize(true);
-//        mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-//        mRecyclerView.setAdapter(mFirebaseAdapter);
-//    }
-//
-//    @Override
-//    protected void onDestroy() {
-//        super.onDestroy();
-//        mFirebaseAdapter.cleanup();
-//    }
 
     private void getUser(String query){
         mPostReference = FirebaseDatabase.getInstance().getReference("users");
@@ -342,5 +324,12 @@ public class MainActivity extends AppCompatActivity {
             mAuth.removeAuthStateListener(mAuthListener);
         }
     }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+//       mConversations.clear();
+    }
+
 
 }

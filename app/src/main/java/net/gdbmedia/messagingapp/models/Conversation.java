@@ -20,11 +20,8 @@ public class Conversation {
     private List<String> userIds = new ArrayList<>();
     private String conversationId;
     private List<String> messages = new ArrayList<>();
-
-
-
-
     private String otherUser;
+    private String otherUserId;
     private String lastMessage;
     private String lastMessageTime;
 
@@ -36,10 +33,12 @@ public class Conversation {
         this.messages = messages;
     }
 
-    public Conversation(String otherUser, String lastMessage, String lastMessageTime) {
+    public Conversation(String otherUser, String lastMessage, String lastMessageTime, String otherUserId, String id) {
         this.otherUser = otherUser;
         this.lastMessage = lastMessage;
         this.lastMessageTime = lastMessageTime;
+        this.otherUserId = otherUserId;
+        this.conversationId = id;
     }
 
     public List<String> getUserIds() {
@@ -73,6 +72,9 @@ public class Conversation {
     }
     public String getOtherUser() {
         return otherUser;
+    }
+    public String getOtherUserId() {
+        return otherUserId;
     }
 
     public String getLastMessage() {
