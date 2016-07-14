@@ -24,6 +24,8 @@ import com.google.firebase.database.Query;
 import net.gdbmedia.messagingapp.R;
 import net.gdbmedia.messagingapp.models.User;
 
+import org.parceler.Parcels;
+
 import butterknife.ButterKnife;
 
 public class MainActivity extends AppCompatActivity {
@@ -60,6 +62,9 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onChildAdded(DataSnapshot snapshot, String previousChild) {
                 mSearcheUser = snapshot.getValue(User.class);
+                Intent intent = new Intent(MainActivity.this, ChatActivity.class);
+                intent.putExtra("searchedUser", Parcels.wrap(mSearcheUser));
+                startActivity(intent);
                 Log.d("name", mSearcheUser.getName());
 
             }

@@ -3,6 +3,8 @@ package net.gdbmedia.messagingapp.models;
 import com.google.firebase.database.Exclude;
 import com.google.firebase.database.IgnoreExtraProperties;
 
+import org.parceler.Parcel;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -12,20 +14,21 @@ import java.util.Map;
  * Created by Guest on 7/13/16.
  */
 @IgnoreExtraProperties
+@Parcel
 public class User {
 
     private String name;
     private String id;
     private String email;
-    private List<Conversation> conversations = new ArrayList<>();
+    private List<String> conversationIds = new ArrayList<>();
 
 
     public User() {}
 
-    public User(String name, String id, String email, List<Conversation> conversations) {
+    public User(String name, String id, String email, List<String> conversationIds) {
         this.name = name;
         this.id = id;
-        this.conversations = conversations;
+        this.conversationIds = conversationIds;
         this.email = email;
     }
 
@@ -37,11 +40,14 @@ public class User {
         return id;
     }
 
-    public List<Conversation> getConversations() {
-        return conversations;
+    public List<String> getConversationIds() {
+        return conversationIds;
     }
-    public void setConversations(List<Conversation> conversations) {
-        this.conversations = conversations;
+    public void addConversationId(String conversationId) {
+        this.conversationIds.add(conversationId);
+    }
+    public void setConversationIds(List<String> conversationIds) {
+        this.conversationIds = conversationIds;
     }
 
     public void setId(String id) {
@@ -65,7 +71,7 @@ public class User {
         result.put("name", name);
         result.put("id", id);
         result.put("email", email);
-        result.put("conversations", conversations);
+        result.put("conversationIds", conversationIds);
 
         return result;
     }

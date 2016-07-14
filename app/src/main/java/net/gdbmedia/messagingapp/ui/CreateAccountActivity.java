@@ -2,6 +2,8 @@ package net.gdbmedia.messagingapp.ui;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -20,10 +22,13 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserProfileChangeRequest;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.gson.Gson;
 
 import net.gdbmedia.messagingapp.R;
 import net.gdbmedia.messagingapp.models.Conversation;
 import net.gdbmedia.messagingapp.models.User;
+
+import org.parceler.Parcels;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -48,6 +53,9 @@ public class CreateAccountActivity extends AppCompatActivity implements View.OnC
     private String mName;
     private String mEmail;
     private DatabaseReference mDatabase;
+    private SharedPreferences mSharedPreferences;
+    private SharedPreferences.Editor mEditor;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,7 +66,13 @@ public class CreateAccountActivity extends AppCompatActivity implements View.OnC
         mAuth = FirebaseAuth.getInstance();
         createAuthStateListener();
         createAuthProgressDialog();
+
+        Log.d(TAG, "anything: ");
         mDatabase = FirebaseDatabase.getInstance().getReference();
+
+
+        mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        mEditor = mSharedPreferences.edit();
 
         mLoginTextView.setOnClickListener(this);
         mCreateUserButton.setOnClickListener(this);
@@ -123,8 +137,15 @@ public class CreateAccountActivity extends AppCompatActivity implements View.OnC
             @Override
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
                 final FirebaseUser user = firebaseAuth.getCurrentUser();
+
                 if (user != null) {
+                    User currentUser = new User(user.getDisplayName(), user.getUid(), user.getEmail(), new ArrayList<String>());
+
+                    Gson gson = new Gson();
+                    String json = gson.toJson(currentUser);
+                    mEditor.putString("currentUser", json).apply();
                     Intent intent = new Intent(CreateAccountActivity.this, MainActivity.class);
+
                     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                     startActivity(intent);
                     finish();
@@ -134,8 +155,8 @@ public class CreateAccountActivity extends AppCompatActivity implements View.OnC
         };
     }
     private void createUser(final FirebaseUser firebaseUser){
-        List<Conversation> conversations = new ArrayList<>();
-        User user = new User(firebaseUser.getDisplayName(), firebaseUser.getUid(), firebaseUser.getEmail(), conversations);
+        List<String> conversationids = new ArrayList<>();
+        User user = new User(firebaseUser.getDisplayName(), firebaseUser.getUid(), firebaseUser.getEmail(), conversationids);
         String key = user.getId();
 
         Map<String, Object> userValues = user.toMap();
