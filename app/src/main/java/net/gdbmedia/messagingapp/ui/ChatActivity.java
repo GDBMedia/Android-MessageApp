@@ -78,7 +78,9 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
 
         mConvo = Parcels.unwrap(getIntent().getParcelableExtra("convo"));
 
+
         LinearLayoutManager llm = new LinearLayoutManager(this);
+        llm.setStackFromEnd(true);
         mRecyclerView.setLayoutManager(llm);
         mRecyclerView.setHasFixedSize(true);
 
@@ -141,7 +143,7 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
         ChatActivity.this.runOnUiThread(new Runnable() {
             @Override
             public void run() {
-
+                Log.d(TAG, "run: " + mCurrentUser.getId());
                 MessageAdapter adapter = new MessageAdapter(ChatActivity.this, mMessages, mCurrentUser.getId());
                 mRecyclerView.setAdapter(adapter);
             }
@@ -182,7 +184,7 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onClick(View v) {
         if(v == mSend){
-
+            boolean virgin = true;
 
             Map<String, Object> childUpdates = new HashMap<>();
 
@@ -190,7 +192,7 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
                 mConvoKey = mDatabase.child("conversations").push().getKey();
                 mConvo = new Conversation(new ArrayList<String>(), mConvoKey, new ArrayList<String>());
 
-
+                virgin=false;
 
                 mConvo.addUser(mSearchedUser.getId());
 
@@ -228,6 +230,10 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
             childUpdates.put("/messages/" + keym, messageValues);
 
             mDatabase.updateChildren(childUpdates);
+            if(!virgin){
+                getMessages();
+            }
+
         }
     }
 }

@@ -141,17 +141,17 @@ public class MainActivity extends AppCompatActivity {
                     new ValueEventListener() {
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot) {
-                            // Get user value
+                            String otheruserId = "";
                             Conversation conversation = dataSnapshot.getValue(Conversation.class);
                             int indexOfCurrentUser = conversation.getUserIds().indexOf(mCurrentUser.getId());
                             for(int i=0; i<conversation.getUserIds().size(); i++) {
                                 //if its not the user, set otherUserId (
                                 if (conversation.getUserIds().indexOf(conversation.getUserIds().get(i)) != indexOfCurrentUser) {
-                                    otherUserId = conversation.getUserIds().get(i);
+                                    otheruserId = conversation.getUserIds().get(i);
                                 }
 
                             }
-                            getOtherUsername(conversation.getMessages().get(conversation.getMessages().size() -1), dataSnapshot.getKey());
+                            getOtherUsername(conversation.getMessages().get(conversation.getMessages().size() -1), dataSnapshot.getKey(), otheruserId);
 
                             // ...
                         }
@@ -164,14 +164,14 @@ public class MainActivity extends AppCompatActivity {
         }
         }
 
-    private void getOtherUsername(final String lastMessageId, final String convoId) {
-        Query queryRef = mUsersReference.child(otherUserId);
+    private void getOtherUsername(final String lastMessageId, final String convoId, final String otheruserId) {
+        Query queryRef = mUsersReference.child(otheruserId);
 
         queryRef.addListenerForSingleValueEvent(
                 new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
-                        String userId = otherUserId;
+                        String userId = otheruserId;
                        String name = dataSnapshot.getValue(User.class).getName();
                         getMessageDeets(lastMessageId, name,userId, convoId);
 
@@ -231,10 +231,29 @@ public class MainActivity extends AppCompatActivity {
         queryRef.addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot snapshot, String previousChild) {
+
                 mSearcheUser = snapshot.getValue(User.class);
-                Intent intent = new Intent(MainActivity.this, ChatActivity.class);
-                intent.putExtra("searchedUser", Parcels.wrap(mSearcheUser));
-                startActivity(intent);
+                if(mConversations.size() < 1){
+                    Intent intent = new Intent(MainActivity.this, ChatActivity.class);
+                    intent.putExtra("searchedUser", Parcels.wrap(mSearcheUser));
+                    startActivity(intent);
+                }else{
+                    for(int i = 0; i < mConversations.size(); i++){
+                        if(!mConversations.get(i).getOtherUserId().equals(mSearcheUser.getId())){
+                            if(i == mConversations.size()-1){
+                                Intent intent = new Intent(MainActivity.this, ChatActivity.class);
+                                intent.putExtra("searchedUser", Parcels.wrap(mSearcheUser));
+                                startActivity(intent);
+                            }
+                        }else{
+                            Toast.makeText(getApplicationContext(), "You are already messaging that Person", Toast.LENGTH_LONG).show();
+                            break;
+                        }
+                    }
+
+                }
+
+
 //                Log.d("name", mSearcheUser.getName());
 
             }
@@ -278,6 +297,8 @@ public class MainActivity extends AppCompatActivity {
             public boolean onQueryTextSubmit(String query) {
                 if(!query.equals(mCurrentUser.getEmail())){
                     getUser(query);
+
+
                 }else{
                     Toast.makeText(getApplicationContext(), "You Can't Message Yourself", Toast.LENGTH_LONG).show();
                 }

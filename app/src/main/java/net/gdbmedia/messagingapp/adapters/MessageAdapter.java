@@ -2,6 +2,7 @@ package net.gdbmedia.messagingapp.adapters;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -48,8 +49,9 @@ public MessageViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
 public void onBindViewHolder(MessageViewHolder messageViewHolder, int i) {
         messageViewHolder.time.setText(mMessages.get(i).getTimestamp());
         messageViewHolder.content.setText(mMessages.get(i).getContent());
+        messageViewHolder.mMessageArea.requestFocus();
         if (!mMessages.get(i).getUid().equals(mCurrentUserId)){
-            messageViewHolder.mMessageArea.setBackgroundColor(Color.GREEN);
+            messageViewHolder.mMessageArea.setBackgroundColor(ContextCompat.getColor(mContext, R.color.primary_light));
             }
         }
 
